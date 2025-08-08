@@ -17,7 +17,7 @@ export const initWeb3 = async () => {
 };
 
 export const purchasePolicy = async (tokenId, from) => {
-  return await contract.methods.mintPolicy(tokenId).send({ from });
+  return await contract.methods.mintPolicyNFT(tokenId).send({ from });
 };
 
 export const claimInsurance = async (tokenId, from) => {
