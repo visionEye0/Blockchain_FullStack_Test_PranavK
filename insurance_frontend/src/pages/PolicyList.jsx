@@ -1,32 +1,56 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import PolicyCard from '../components/PolicyCard'
-import { getAllPolicies, getUserPolicies } from '../api'
+import { getAllPolicies, getPolicyByUserId } from '../api'
+import Web3 from 'web3'
 
-export default function PolicyList(){
+export default function PolicyList() {
   const [available, setAvailable] = useState([])
   const [userPolicies, setUserPolicies] = useState([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState('all')
   const [error, setError] = useState(null)
+  const [account, setAccount] = useState(null)
 
-  useEffect(()=>{
-    load()
-  },[])
+  useEffect(() => {
+    init()
+  }, [])
 
-  async function load(){
-    setLoading(true)
-    setError(null)
-    try{
-      const [availRes, userRes] = await Promise.all([getAllPolicies(), getUserPolicies()])
-      setAvailable(availRes.data || [])
-      setUserPolicies(userRes.data || [])
-    }catch(err){
+  async function init() {
+    try {
+      if (window.ethereum) {
+        const web3 = new Web3(window.ethereum)
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+        const userAddress = accounts[0]
+        setAccount(userAddress)
+        load(userAddress)
+      } else {
+        setError('MetaMask not detected. Please install MetaMask to continue.')
+      }
+    } catch (err) {
       console.error(err)
-      setError('Failed to load policies. Check API server and network.')
-    }finally{ setLoading(false) }
+      setError('Failed to connect to MetaMask.')
+    }
   }
 
-  const displayed = [...userPolicies, ...available].filter(p=>{
+  async function load(userAddress) {
+    setLoading(true)
+    setError(null)
+    try {
+      const [availRes, userRes] = await Promise.all([
+        getAllPolicies(),
+        getPolicyByUserId(userAddress) // now fetching only policies for this wallet
+      ])
+      setAvailable(availRes.data || [])
+      setUserPolicies(userRes.data || [])
+    } catch (err) {
+      console.error(err)
+      setError('Failed to load policies. Check API server and network.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const displayed = [...userPolicies, ...available].filter(p => {
     if (filter === 'all') return true
     return p.status === filter
   })
@@ -48,14 +72,14 @@ export default function PolicyList(){
               <option value="claimed">Claimed</option>
             </select>
             <button
-              onClick={load}
+              onClick={() => load(account)}
               className="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-lg shadow"
             >
               Refresh
             </button>
           </div>
         </div>
-  
+
         {/* Status messages */}
         {loading && (
           <div className="p-8 bg-white rounded-lg shadow text-center text-gray-600 text-lg">
@@ -67,7 +91,7 @@ export default function PolicyList(){
             {error}
           </div>
         )}
-  
+
         {/* Policies grid */}
         <div className="grid grid-cols-3 gap-8">
           {displayed.map((p) => (
@@ -79,7 +103,7 @@ export default function PolicyList(){
             </div>
           ))}
         </div>
-  
+
         {/* Empty state */}
         {!loading && displayed.length === 0 && (
           <div className="mt-16 text-center text-gray-500 text-xl">
@@ -88,7 +112,5 @@ export default function PolicyList(){
         )}
       </div>
     </div>
-  );
-  
-  
+  )
 }

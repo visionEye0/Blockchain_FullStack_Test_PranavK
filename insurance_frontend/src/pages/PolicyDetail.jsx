@@ -1,102 +1,153 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getAllPolicies, getUserPolicies, postPolicy } from '../api'
+import { getAllPolicies, getPolicyByUserId, postPolicy, postClaimPolicy } from '../api'
 import { getWeb3, mintPolicyNFT, claimPolicy } from '../web3'
 import config from '../config'
 import contract_factory from "../blockchain/contractABIs/CropInsuranceNFT.json"
 
-// Placeholders for ABI - replace with real ABI
 const CONTRACT_ABI = contract_factory.abi
 
-export default function PolicyDetail(){
+export default function PolicyDetail() {
   const { id } = useParams()
   const [policy, setPolicy] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [txLoading, setTxLoading] = useState(false)
+  const [purchaseLoading, setPurchaseLoading] = useState(false)  // separate loading state
+  const [claimLoading, setClaimLoading] = useState(false)        // separate loading state
   const [error, setError] = useState(null)
   const [account, setAccount] = useState(null)
+  const [userPolicies, setUserPolicies] = useState([])
 
-  useEffect(()=>{ loadPolicy() },[id])
+  useEffect(() => {
+    async function init() {
+      if (!account) {
+        await connect()
+      }
+      await loadPolicy()
+    }
+    init()
+  }, [account])
 
-  async function loadPolicy(){
-    setLoading(true); setError(null)
-    try{
-      const [availRes, userRes] = await Promise.all([getAllPolicies(), getUserPolicies()])
-      const combined = [...userRes.data, ...availRes.data]
+  async function loadPolicy() {
+    setLoading(true)
+    setError(null)
+    try {
+      const availRes = await getAllPolicies()
+      let combined = [...availRes.data]
+
+      if (account) {
+        const userRes = await getPolicyByUserId(account)
+        setUserPolicies(userRes.data || [])
+        combined = [...userRes.data, ...availRes.data]
+      }
+
       const found = combined.find(p => (p._id || p.id) === id)
-      console.log("found ===== ", found)
       setPolicy(found || null)
-    }catch(err){
+    } catch (err) {
+      console.error(err)
       setError('Could not load policy')
-    }finally{ setLoading(false) }
+      setPolicy(null)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  async function connect(){
-    try{
+  async function connect() {
+    try {
       const w3 = await getWeb3()
       const accounts = await w3.eth.getAccounts()
-      setAccount(accounts[0])
-    }catch(err){
+      if (accounts && accounts.length > 0) setAccount(accounts[0])
+      else setError('No accounts found in wallet')
+    } catch (err) {
       setError(err.message)
     }
   }
 
   function expirationDateCalculate(months) {
     const now = new Date();
-    const futureDate = new Date(now.getFullYear(), now.getMonth() + months, now.getDate());
-    
-    // Handle overflow (e.g., December + 3 months → March next year)
-    if (futureDate.getMonth() !== (now.getMonth() + months) % 12) {
-      futureDate.setFullYear(now.getFullYear() + Math.floor((now.getMonth() + months) / 12));
-    }
-  
-    // Return Unix timestamp (seconds)
-    return Math.floor(futureDate.getTime() / 1000);
+    const futureDate = new Date(now);
+    futureDate.setMonth(futureDate.getMonth() + months);
+    return Math.floor(futureDate.getTime() / 1000); // seconds
   }
 
-  async function handlePurchase(){
+  async function handlePurchase() {
     if (!account) return setError('Connect your wallet first')
     if (!policy) return
-    setTxLoading(true); setError(null)
-    try{
-      // prepare metadata for mint call - adapt as per your contract
-      const metadata = { 
-        farmerId: account, 
-        cropType: policy.crop_type, 
-        coverageAmount: policy.coverage_amount, 
-        premium: policy.premium, 
-        expirationDate: expirationDateCalculate(policy.duration_months)
+    setPurchaseLoading(true)
+    setError(null)
+    try {
+      const expirationDate = expirationDateCalculate(policy.duration_months)
+      const metadata = {
+        farmerId: account,
+        cropType: policy.crop_type,
+        coverageAmount: policy.coverage_amount,
+        premium: policy.premium,
+        expirationDate
       }
-      await mintPolicyNFT(CONTRACT_ABI, config.contractAddress, account, metadata)
+
+      const receipt = await mintPolicyNFT(CONTRACT_ABI, config.contractAddress, account, metadata)
+
+      let tokenId
+      if (receipt?.events?.Transfer?.returnValues) {
+        tokenId = receipt.events.Transfer.returnValues.tokenId
+      } else if (receipt?.events) {
+        const transferEvent = Object.values(receipt.events).find(e => e.event === 'Transfer')
+        tokenId = transferEvent?.returnValues?.tokenId
+      }
+
+      if (!tokenId) throw new Error('Could not retrieve tokenId from mint transaction')
+
+      if (typeof tokenId === 'bigint') tokenId = tokenId.toString()
+
       await postPolicy({
         farmer_id: metadata.farmerId,
         crop_type: metadata.cropType,
         coverage_amount: metadata.coverageAmount,
         premium: metadata.premium,
-        expiration_date: metadata.expirationDate
+        expiration_date: metadata.expirationDate,
+        token_id: tokenId
       })
-      alert('Mint transaction submitted — refresh after block confirmation')
-    }catch(err){
+
+      alert(`Minted NFT with Token ID: ${tokenId} — refresh after block confirmation`)
+      await loadPolicy()
+    } catch (err) {
       console.error(err)
       setError('Purchase failed: ' + (err.message || err))
-    }finally{ setTxLoading(false) }
+    } finally {
+      setPurchaseLoading(false)
+    }
   }
 
-  async function handleClaim(){
+  async function handleClaim() {
     if (!account) return setError('Connect your wallet first')
     if (!policy || !policy.token_id) return setError('Policy has no token to claim')
-    setTxLoading(true); setError(null)
-    try{
+
+    setClaimLoading(true)
+    setError(null)
+
+    try {
       await claimPolicy(CONTRACT_ABI, config.contractAddress, account, policy.token_id)
-      alert('Claim transaction submitted — check events for payout')
-    }catch(err){
+      await postClaimPolicy({
+        farmer_id: account,
+        token_id: policy.token_id
+      })
+
+      alert('Claim successful — blockchain + backend updated')
+      await loadPolicy()
+    } catch (err) {
       console.error(err)
       setError('Claim failed: ' + (err.message || err))
-    }finally{ setTxLoading(false) }
+    } finally {
+      setClaimLoading(false)
+    }
   }
 
   if (loading) return <div>Loading policy...</div>
-  if (!policy) return <div>Policy not found.</div>
+  if (!loading && !policy) return <div>Policy not found.</div>
+
+  const statusClasses = {
+    active: 'bg-green-600 text-white px-3 py-1 rounded font-semibold inline-block',
+    claimed: 'bg-yellow-500 text-white px-3 py-1 rounded font-semibold inline-block'
+  }
 
   return (
     <div className="space-y-4">
@@ -104,26 +155,50 @@ export default function PolicyDetail(){
         <h2 className="text-xl font-semibold">{policy.crop_type}</h2>
         <p className="text-sm text-gray-600">Coverage: ₹{policy.coverage_amount}</p>
         <p className="text-sm text-gray-600">Premium: ₹{policy.premium}</p>
-        <p className="text-sm text-gray-600">Status: {policy.status}</p>
+
+        <p className="text-sm">
+          Status: <span className={statusClasses[policy.status] || ''}>{policy.status}</span>
+        </p>
+
         <p className="text-sm text-gray-600">Token: {policy.token_id ?? '—'}</p>
-        <p className="text-sm text-gray-600">Expires: {policy.expiration_date ? new Date(policy.expiration_date).toLocaleString() : '—'}</p>
+        <p className="text-sm text-gray-600">
+          Expires:{' '}
+          {policy.expiration_date
+            ? new Date(policy.expiration_date * 1000).toLocaleString()
+            : `${policy.duration_months} months`}
+        </p>
       </div>
 
       {error && <div className="text-red-700">{error}</div>}
 
       <div className="flex gap-3">
         {!account ? (
-          <button onClick={connect} className="px-4 py-2 bg-indigo-600 text-white rounded">Connect Wallet</button>
+          <button
+            onClick={connect}
+            className="px-4 py-2 bg-indigo-600 text-white rounded"
+          >
+            Connect Wallet
+          </button>
         ) : (
           <div className="text-sm text-gray-600">Connected: {account}</div>
         )}
 
-        <button onClick={handlePurchase} disabled={txLoading} className="px-4 py-2 bg-green-600 text-white rounded">{txLoading ? 'Processing...' : 'Purchase (Mint NFT)'}</button>
+        <button
+          onClick={handlePurchase}
+          disabled={purchaseLoading || claimLoading}
+          className="px-4 py-2 bg-green-600 text-white rounded"
+        >
+          {purchaseLoading ? 'Processing...' : 'Purchase (Mint NFT)'}
+        </button>
 
-        <button onClick={handleClaim} disabled={txLoading || !policy.token_id} className="px-4 py-2 bg-orange-600 text-white rounded">{txLoading ? 'Processing...' : 'Claim Insurance'}</button>
+        <button
+          onClick={handleClaim}
+          disabled={claimLoading || purchaseLoading || !policy.token_id}
+          className="px-4 py-2 bg-yellow-600 text-white rounded"
+        >
+          {claimLoading ? 'Processing...' : 'Claim Insurance'}
+        </button>
       </div>
-
-      <div className="text-sm text-gray-500 pt-4">Notes: Admin-predefined policies are fetched from the available-policies endpoint. User-owned policies come from the root API route and contain token ids when minted.</div>
     </div>
   )
 }
