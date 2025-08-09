@@ -2,7 +2,32 @@
 
 ---
 
-### API Setup
+### Get Started
+
+1. **Ensure you have mongodb installed in your system, to check that type `sudo systemctl status mongod.service` in your linux terminal**
+    * If its installed it'll show like this
+      ```
+      ● mongod.service - MongoDB Database Server
+      Loaded: loaded (/lib/systemd/system/mongod.service; enabled; vendor preset: enabled)
+      Active: active (running) since Sat 2025-08-09 16:53:58 UTC; 23min ago
+      ```
+
+2. **Then install the necessary packages using the command**
+
+   ```
+   cd insurance_api/
+   npm install
+   ```
+3. **Create .env file in the insurance_api directory and populate it with following values**
+   ```
+   MONGODB_URI=mongodb://localhost:27017/crop-insurance
+   ```
+
+4. **Then type in `node seedAvailablePolicies.js` to populate the database with a list of policies the farmers can purchase**
+
+5. **Now run the node.js server by typing `node index.js`**
+
+### API Overview
 
 The backend API is built using **Express.js** and connects to **MongoDB** via Mongoose for data persistence.
 

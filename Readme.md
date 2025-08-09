@@ -10,6 +10,16 @@ This repository contains a decentralized Crop Insurance platform divided into th
 └── Readme.md # This general project overview
 ```
 
+## Getting Started
+
+1. **Go to insurance_api => follow the instructions and setup the server, only after that**
+1. **Go to insurance_blockchain => follow the instructions, only after that**
+
+1. **Go to insurance_frontend => follow the readme instructions**
+
+
+
+**Note: For detailed instructions, setup guides, and usage examples, please refer to the respective README files in each directory.**
 
 ---
 
@@ -27,12 +37,9 @@ This repository contains a decentralized Crop Insurance platform divided into th
   Contains the React app with UI components, API integration, and blockchain interaction logic.  
   See `insurance_frontend/README.md` for frontend setup, usage, and integration info.
 
+- **insurance_*/proof**
+  Every Directory has a proof folder, which shows the proof that the code is working
 ---
 
-## Getting Started
-
-For detailed instructions, setup guides, and usage examples, please refer to the respective README files in each directory.
-
----
 
 Thank you for exploring the Crop Insurance NFT Project! :)

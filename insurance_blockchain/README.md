@@ -6,66 +6,38 @@
 
 ---
 
+## Running Locally (Sepolia testnet)
+
+1. **Install the required packages using `npm install`**
+
+2. **Create a .env file and put in the below values**
+   ```
+   SEPOLIA_RPC_URL="https://sepolia.infura.io/v3/8653c22605d2484ca3aa8748053a7080"
+
+   SEPOLIA_WALLET_PRIVATE_KEY="fd8d3b00739e9a8373e59df0b4608c68187158095744061d30f425ef44408b49"
+   
+   ```
+
+3. **Deploy the smart contract by typing `npx hardhat run scripts/deploy.js --network sepolia` and copy the address shown in the console**
+
+   ```
+   $insurance_blockchain$ npx hardhat run scripts/deploy.js 
+
+   [dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+   Compiled 16 Solidity files successfully (evm target: paris).
+   [dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+   
+   Deployed at: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+   ```
+
+4. **Also copy `CropInsuranceNFT.json` from `insurance_blockchain/artifacts/contracts/CropInsuranceNFT.sol/` and paste it in `insurance_frontend/src/contractABIs/.`** 
+
+
 ## Features
 
 - Mint crop insurance policy NFTs with custom metadata.
 - Claim policy NFTs to mark the insurance as used.
 - Retrieve detailed policy information via a view function.
-
----
-
-## Smart Contract Setup
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) and npm installed
-- [Hardhat](https://hardhat.org/) framework installed (`npm install --save-dev hardhat`)
-- Sepolia testnet RPC URL (e.g., from [Infura](https://infura.io/) or [Alchemy](https://www.alchemy.com/))
-- Ethereum wallet (e.g., MetaMask) with Sepolia testnet access
-
-### Install Dependencies
-
-```bash
-npm install --save-dev @openzeppelin/contracts ethers hardhat
-```
-
----
-
-### Deployment Process
-
-**1. Configure Hardhat**
-
-Create or update your `hardhat.config.js`
-
-```
-require("@nomicfoundation/hardhat-toolbox");
-require("dotenv").config()
-
-/** @type import('hardhat/config').HardhatUserConfig */
-module.exports = {
-  solidity: "0.8.28",
-  networks: {
-    sepolia: {
-      url: process.env.SEPOLIA_RPC_URL,
-      accounts: [process.env.SEPOLIA_WALLET_PRIVATE_KEY],
-    },
-  },
-};
-
-```
-**_Replace SEPOLIA_RPC_URL and SEPOLIA_WALLET_PRIVATE_KEY with your actual values_**
-
-**2. Execute the deployment script**
-
-```
-npx hardhat run scripts/deploy.js --network sepolia
-```
-
-**The contract will deploy and output its address, for example:**
-
-```
-CropInsuranceNFT deployed to: 0xD519979C55998cbBaA49f1b7Df93668C119B237c
-```
 
 ---
 

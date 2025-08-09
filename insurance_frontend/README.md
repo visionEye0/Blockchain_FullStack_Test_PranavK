@@ -6,6 +6,44 @@ This React frontend is designed to interact seamlessly with the backend API and 
 
 ---
 
+## Running Locally
+
+1. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+2. **Configure environment**
+
+   * Create a `.env` file in the repository & enter these values.
+
+   ```
+   VITE_API_BASE_URL=http://localhost:5000
+   VITE_CONTRACT_ADDRESS={copy the address you got from insurance_blockchain/Readme.md - step 3}
+   VITE_RPC_URL=https://sepolia.infura.io/v3/8653c22605d2484ca3aa8748053a7080
+   VITE_CHAIN_ID=11155111
+   VITE_CHAIN_NAME=Sepolia Test Network
+   VITE_CURRENCY_NAME=Ethereum
+   VITE_CURRENCY_SYMBOL=ETH
+   VITE_CURRENCY_DECIMALS=18
+   ```
+
+3. **Start development server**
+
+   ```
+   npm run dev
+   ```
+
+4. **For testing the frontend, install metamask and add wallet using private key, switch network to sepolia testnet and use this private key**
+
+   ```
+   Private_key=d0b18310876d5685ab4c8cc5089c4c0f02fb71b7139d2436bb20291588ad30dd
+   ```
+
+
+
+---
+
 ## Project Structure
 
 ```
@@ -86,24 +124,6 @@ This React frontend is designed to interact seamlessly with the backend API and 
 
 ---
 
-## Running Locally
-
-1. **Install dependencies**
-
-```bash
-npm install
-```
-2. **Configure environment**
-
-* Update src/config.js with the correct API base URL and deployed smart contract address.
-
-3. **Start development server**
-
-```
-npm run dev
-```
-
-Open http://localhost:5000 (or the port shown) to access the app.
 
 ### Summary
 
