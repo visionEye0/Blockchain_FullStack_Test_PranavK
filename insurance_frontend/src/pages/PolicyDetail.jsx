@@ -18,29 +18,30 @@ export default function PolicyDetail() {
   const [userPolicies, setUserPolicies] = useState([])
 
   useEffect(() => {
-    async function init() {
-      if (!account) {
-        await connect()
-      }
-      await loadPolicy()
-    }
-    init()
-  }, [account])
-
+    if (!account) connect()
+  }, [])
+  
+  useEffect(() => {
+    if (account) loadPolicy()
+  }, [account, id])
+  
   async function loadPolicy() {
     setLoading(true)
     setError(null)
     try {
       const availRes = await getAllPolicies()
-      let combined = [...availRes.data]
-
+      let combined = availRes?.data ?? []
+  
       if (account) {
         const userRes = await getPolicyByUserId(account)
-        setUserPolicies(userRes.data || [])
-        combined = [...userRes.data, ...availRes.data]
+        setUserPolicies(userRes?.data ?? [])
+        combined = [...(userRes?.data ?? []), ...combined]
       }
-
-      const found = combined.find(p => (p._id || p.id) === id)
+  
+      console.log("Combined policies:", combined)
+      const found = combined.find(p => String(p._id || p.id) === String(id))
+      console.log("Found policy:", found)
+  
       setPolicy(found || null)
     } catch (err) {
       console.error(err)
@@ -50,6 +51,7 @@ export default function PolicyDetail() {
       setLoading(false)
     }
   }
+  
 
   async function connect() {
     try {
