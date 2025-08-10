@@ -40,6 +40,7 @@ This React frontend is designed to interact seamlessly with the backend API and 
    Private_key=d0b18310876d5685ab4c8cc5089c4c0f02fb71b7139d2436bb20291588ad30dd
    ```
 
+5. **Go to `http://localhost:5173` where the frontend is hosted & play around with the functionalities**
 
 
 ---

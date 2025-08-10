@@ -9,7 +9,13 @@ This repository contains a decentralized Crop Insurance platform divided into th
 ├── insurance_frontend # React frontend integrating blockchain and backend API
 └── Readme.md # This general project overview
 ```
+## Watch Demo
 
+[Crop Insurance Policy](https://drive.google.com/file/d/1eab8mxAJJz035d9sxq7qxYJZyGqvnq7I/view?usp=sharing)
+
+
+
+---
 ## Getting Started
 
 1. **Go to insurance_api => follow the instructions and setup the server, only after that**
@@ -17,11 +23,12 @@ This repository contains a decentralized Crop Insurance platform divided into th
 
 1. **Go to insurance_frontend => follow the readme instructions**
 
-
+1. **Go to `Task4.md` to see the optimizations that i have done to save on gas fee**
 
 **Note: For detailed instructions, setup guides, and usage examples, please refer to the respective README files in each directory.**
 
 ---
+
 
 ## Directory Overview
 

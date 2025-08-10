@@ -32,6 +32,7 @@
 
 4. **Also copy `CropInsuranceNFT.json` from `insurance_blockchain/artifacts/contracts/CropInsuranceNFT.sol/` and paste it in `insurance_frontend/src/contractABIs/.`** 
 
+5. **Now go to `insurance_frontend/README.md` and follow the instruction there**
 
 ## Features
 

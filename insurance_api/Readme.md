@@ -2,7 +2,7 @@
 
 ---
 
-### Get Started
+### Running Locally (api server)
 
 1. **Ensure you have mongodb installed in your system, to check that type `sudo systemctl status mongod.service` in your linux terminal**
     * If its installed it'll show like this
@@ -26,6 +26,8 @@
 4. **Then type in `node seedAvailablePolicies.js` to populate the database with a list of policies the farmers can purchase**
 
 5. **Now run the node.js server by typing `node index.js`**
+
+6. **Now Go to `insurance_blockchain/README.md` and follow the steps there**
 
 ### API Overview
 
